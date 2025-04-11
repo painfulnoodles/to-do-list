@@ -1,55 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import './App.css';
 
 function App() {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem('tasks');
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
+
   const [newTask, setNewTask] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 添加任务
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
   const addTask = () => {
+    if (newTask.trim() === '') return;
     setTasks([...tasks, { id: Date.now(), text: newTask }]);
     setNewTask('');
   };
 
-  // 删除任务
   const deleteTask = (id) => {
     setTasks(tasks.filter(task => task.id !== id));
   };
 
-  // 编辑任务
   const editTask = (id, newText) => {
     setTasks(tasks.map(task => task.id === id ? { ...task, text: newText } : task));
   };
 
-  // 过滤任务
-  const filteredTasks = tasks.filter(task => task.text.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredTasks = tasks.filter(task =>
+    task.text.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
       <h1>To-Do List</h1>
-      <input 
-        type="text" 
-        value={newTask} 
-        onChange={(e) => setNewTask(e.target.value)} 
+      <input
+        type="text"
+        value={newTask}
+        onChange={(e) => setNewTask(e.target.value)}
         placeholder="Add a new task"
       />
       <button onClick={addTask}>Add Task</button>
-      
-      <input 
-        type="text" 
-        placeholder="Search tasks..." 
-        onChange={(e) => setSearchTerm(e.target.value)} 
+
+      <input
+        type="text"
+        placeholder="Search tasks..."
+        onChange={(e) => setSearchTerm(e.target.value)}
       />
-      
+
       <ul>
         {filteredTasks.map(task => (
           <li key={task.id}>
             <span>{task.text}</span>
             <button onClick={() => deleteTask(task.id)}>Delete</button>
-            <button onClick={() => editTask(task.id, prompt('Edit task', task.text))}>Edit</button>
+            <button onClick={() => {
+              const newText = prompt('Edit task', task.text);
+              if (newText !== null) {
+                editTask(task.id, newText);
+              }
+            }}>Edit</button>
           </li>
         ))}
       </ul>
